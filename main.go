@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"github.com/fujiwara/zabbix-aggregate-agent/zabbix_aggregate_agent"
+	"github.com/fujiwara/go-zabbix-get/zabbix"
 )
 
 var (
@@ -38,7 +38,7 @@ func main() {
 	}
 
 	address := fmt.Sprintf("%s:%d", server, port)
-	value, err := zabbix_aggregate_agent.Get(address, key, timeout)
+	value, err := zabbix.Get(address, key, timeout)
 	if err != nil {
 		log.Fatalf("error: %s", err)
 	}
