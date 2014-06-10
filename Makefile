@@ -5,3 +5,7 @@ all:
 	gox -os="linux darwin" -arch="amd64 386" -output "pkg/{{.OS}}_{{.Arch}}/{{.Dir}}"
 	git checkout revision.go
 	rm revision.go.bak
+
+test:
+	go test zabbix/protocol_test.go
+	go test zabbix/client_test.go
