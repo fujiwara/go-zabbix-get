@@ -19,16 +19,18 @@ $ go-zabbix-get -s <hostname or IP> -p <port> -k <key>
 Output format
 -----
 
-1. "zabbix" (default)
+"zabbix" (default)
+
 zabbix-get compatible format.
 ```
 [value]\n
 ```
 
-2. "sensu"
+"sensu"
+
 sensu plugin compatible format.
 ```
-[key]\t[value]\t[unix time]
+[key]\t[value]\t[unixtime]
 ```
 
 LICENCE
