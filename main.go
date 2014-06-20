@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/fujiwara/go-zabbix-get/zabbix"
 	"log"
 	"os"
-	"github.com/fujiwara/go-zabbix-get/zabbix"
+	"time"
 )
 
 var (
@@ -14,17 +15,19 @@ var (
 
 func main() {
 	var (
-		port int
-		server string
-		key string
-		timeout int
+		port        int
+		server      string
+		key         string
+		timeout     int
 		showVersion bool
+		format      string
 	)
 	flag.IntVar(&port, "p", 10050, "port")
 	flag.StringVar(&server, "s", "127.0.0.1", "hostname or IP")
 	flag.StringVar(&key, "k", "", "key")
 	flag.IntVar(&timeout, "t", 30, "timeout")
 	flag.BoolVar(&showVersion, "V", false, "show Version")
+	flag.StringVar(&format, "f", "zabbix", "output format (zabbix or sensu)")
 	flag.Parse()
 
 	if showVersion {
@@ -42,5 +45,19 @@ func main() {
 	if err != nil {
 		log.Fatalf("error: %s", err)
 	}
+
+	switch format {
+	case "sensu":
+		printFormatSensu(key, value)
+	default:
+		printFormatZabbix(value)
+	}
+}
+
+func printFormatZabbix(value []byte) {
 	fmt.Printf("%s\n", value)
+}
+
+func printFormatSensu(key string, value []byte) {
+	fmt.Printf("%s\t%s\t%d\n", key, value, time.Now().Unix())
 }
