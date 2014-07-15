@@ -8,5 +8,4 @@ all:
 	rm revision.go.bak
 
 test:
-	go test zabbix/protocol_test.go
-	go test zabbix/client_test.go
+	cd zabbix && go test

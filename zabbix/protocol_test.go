@@ -1,14 +1,13 @@
 package zabbix
 
 import (
-	"github.com/fujiwara/go-zabbix-get/zabbix"
 	"bytes"
 	"testing"
 )
 
 func TestPacket(t *testing.T) {
 	source := []byte("test.data")
-	packet := zabbix.Data2Packet(source)
+	packet := Data2Packet(source)
 	compare := []byte{
 		90, 66, 88, 68,         // "ZBXD"
 		1,                      // \x01
@@ -20,7 +19,7 @@ func TestPacket(t *testing.T) {
 	if ! bytes.Equal(packet, compare) {
 		t.Errorf("invalid packet %v <=> %v", packet, compare)
 	}
-	restored, err := zabbix.Packet2Data(packet)
+	restored, err := Packet2Data(packet)
 	if err != nil {
 		t.Errorf("must be no error: %v", err)
 	}
@@ -38,7 +37,7 @@ func TestCorruptedPacket(t *testing.T) {
 		46,                     // "."
 		100, 97, 116, 97,       // "data"
 	}
-	restored, err := zabbix.Packet2Data(packet)
+	restored, err := Packet2Data(packet)
 	if err == nil {
 		t.Errorf("must be error")
 	}
@@ -47,9 +46,9 @@ func TestCorruptedPacket(t *testing.T) {
 
 func TestStreamBinary(t *testing.T) {
 	source := []byte("test.data")
-	packet := zabbix.Data2Packet(source)
+	packet := Data2Packet(source)
 	buf := bytes.NewReader(packet)
-	restored, err := zabbix.Stream2Data(buf)
+	restored, err := Stream2Data(buf)
 	if err != nil {
 		t.Errorf("must be no error: %v", err)
 	}
@@ -61,7 +60,7 @@ func TestStreamBinary(t *testing.T) {
 func TestStreamText(t *testing.T) {
 	source := []byte("test.data\n")
 	reader := bytes.NewReader(source)
-	restored, err := zabbix.Stream2Data(reader)
+	restored, err := Stream2Data(reader)
 	if err != nil {
 		t.Errorf("must be no error: %v", err)
 	}
