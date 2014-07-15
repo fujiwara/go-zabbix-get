@@ -30,7 +30,7 @@ zabbix-get compatible format.
 
 sensu plugin compatible format.
 ```
-[key]\t[value]\t[unixtime]
+[key]\t[value]\t[unixtime]\n
 ```
 
 LICENCE
