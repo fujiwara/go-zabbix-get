@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	Version = "0.0.3"
+	Version string
 )
 
 func main() {
@@ -31,7 +31,7 @@ func main() {
 	flag.Parse()
 
 	if showVersion {
-		fmt.Printf("go-zabbix-get version %s (revision %s)\n", Version, Revision)
+		fmt.Printf("go-zabbix-get version %s\n", Version)
 		os.Exit(255)
 	}
 

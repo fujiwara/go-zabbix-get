@@ -1,11 +1,15 @@
-GIT_REV := $(shell git rev-parse --short HEAD)
+GIT_VER := $(shell git describe --tags)
 
 all:
-	sed -i.bak -e "s/HEAD/$(GIT_REV)/" revision.go
-	gox -os="linux darwin" -arch="amd64 386" -output "pkg/{{.OS}}_{{.Arch}}/{{.Dir}}"
-	gox -os="linux" -arch="arm" -output "pkg/{{.OS}}_{{.Arch}}/{{.Dir}}"
-	git checkout revision.go
-	rm revision.go.bak
+	go get github.com/fujiwara/go-zabbix-get
+
+binary:
+	gox -os="linux darwin" -arch="amd64" -output "pkg/{{.Dir}}-${GIT_VER}-{{.OS}}-{{.Arch}}" -ldflags "-X main.Version ${GIT_VER}"
+	gox -os="linux" -arch="arm" -output "pkg/{{.Dir}}-${GIT_VER}-{{.OS}}-{{.Arch}}" -ldflags "-X main.Version ${GIT_VER}"
+	cd pkg && find . -name "*${GIT_VER}*" -type f -exec zip {}.zip {} \;
 
 test:
 	cd zabbix && go test
+
+clean:
+	rm -f pkg/*
