@@ -21,6 +21,7 @@ func main() {
 		timeout     int
 		showVersion bool
 		format      string
+		outputKey   string
 	)
 	flag.IntVar(&port, "p", 10050, "port")
 	flag.StringVar(&server, "s", "127.0.0.1", "hostname or IP")
@@ -28,6 +29,7 @@ func main() {
 	flag.IntVar(&timeout, "t", 30, "timeout")
 	flag.BoolVar(&showVersion, "V", false, "show Version")
 	flag.StringVar(&format, "f", "zabbix", "output format (zabbix or sensu)")
+	flag.StringVar(&outputKey, "o", "", "output key string (format=sensu only)")
 	flag.Parse()
 
 	if showVersion {
@@ -48,7 +50,11 @@ func main() {
 
 	switch format {
 	case "sensu":
-		printFormatSensu(key, value)
+		if outputKey == "" {
+			printFormatSensu(key, value)
+		} else {
+			printFormatSensu(outputKey, value)
+		}
 	default:
 		printFormatZabbix(value)
 	}
