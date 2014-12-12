@@ -2,8 +2,15 @@ package zabbix
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net"
+	"time"
+)
+
+const (
+	TrapperResponseSuccess = "success"
+	TrapperResponseInfoFmt = "processed: %d; failed: %d; total: %d; seconds spent: %f"
 )
 
 type TrapperDatum struct {
@@ -20,8 +27,11 @@ type TrapperRequest struct {
 }
 
 type TrapperResponse struct {
-	Response string `json:"response"`
-	Info     string `json:"info"`
+	Response  string `json:"response"`
+	Info      string `json:"info"`
+	Proceeded int    `json:""`
+	Failed    int    `json:""`
+	Total     int    `json:""`
 }
 
 func RunTrapperServer(addr string, callback func(TrapperRequest) (TrapperResponse, error)) error {
@@ -38,7 +48,7 @@ func RunTrapperServer(addr string, callback func(TrapperRequest) (TrapperRespons
 			log.Println("Error accept:", err)
 			continue
 		}
-		log.Println("Accept connction from", conn.RemoteAddr())
+		// log.Println("Accept connection from", conn.RemoteAddr())
 		go handleTrapperConn(conn, callback)
 	}
 	return nil
@@ -46,6 +56,7 @@ func RunTrapperServer(addr string, callback func(TrapperRequest) (TrapperRespons
 
 func handleTrapperConn(conn net.Conn, callback func(TrapperRequest) (TrapperResponse, error)) {
 	defer conn.Close()
+	start := time.Now()
 	var request TrapperRequest
 	input, err := Stream2Data(conn)
 	if err != nil {
@@ -53,7 +64,6 @@ func handleTrapperConn(conn net.Conn, callback func(TrapperRequest) (TrapperResp
 		return
 	}
 	err = json.Unmarshal(input, &request)
-	log.Printf("request: %#v", request)
 	if err != nil {
 		log.Println("decode request error:", err)
 		return
@@ -63,6 +73,19 @@ func handleTrapperConn(conn net.Conn, callback func(TrapperRequest) (TrapperResp
 	if err != nil {
 		log.Println("process callback error", err)
 		return
+	}
+	res.Total = res.Proceeded + res.Failed
+	if res.Response == "" {
+		res.Response = TrapperResponseSuccess
+	}
+	if res.Info == "" {
+		res.Info = fmt.Sprintf(
+			TrapperResponseInfoFmt,
+			res.Proceeded,
+			res.Failed,
+			res.Total,
+			time.Now().Sub(start).Seconds(),
+		)
 	}
 	responseJson, _ := json.Marshal(res)
 	conn.Write(Data2Packet(responseJson))
