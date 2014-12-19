@@ -45,7 +45,7 @@ func (r TrapperResponse) ToPacket() []byte {
 	return Data2Packet(data)
 }
 
-func SendBulk(req TrapperRequest, addr string, timeout time.Duration) (res TrapperResponse, err error) {
+func SendBulk(addr string, req TrapperRequest, timeout time.Duration) (res TrapperResponse, err error) {
 	packet := req.ToPacket()
 
 	addr = FillDefaultPort(addr, ServerDefaultPort)
@@ -72,12 +72,12 @@ func SendBulk(req TrapperRequest, addr string, timeout time.Duration) (res Trapp
 	return res, nil
 }
 
-func Send(data TrapperData, addr string, timeout time.Duration) (TrapperResponse, error) {
+func Send(addr string, data TrapperData, timeout time.Duration) (TrapperResponse, error) {
 	req := TrapperRequest{
 		Request: TrapperRequestString,
 		Data:    []TrapperData{data},
 	}
-	return SendBulk(req, addr, timeout)
+	return SendBulk(addr, req, timeout)
 }
 
 func RunTrapper(addr string, callback func(TrapperRequest) (TrapperResponse, error)) error {

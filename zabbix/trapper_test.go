@@ -31,8 +31,8 @@ func TestTrapper(t *testing.T) {
 
 func TestTrapperCannotConnect(t *testing.T) {
 	value, err := zabbix.Send(
-		zabbix.TrapperData{Host: "localhost", Key: "foo", Value: "bar"},
 		"localhost:10049",
+		zabbix.TrapperData{Host: "localhost", Key: "foo", Value: "bar"},
 		timeout,
 	)
 	if err == nil {
@@ -42,8 +42,8 @@ func TestTrapperCannotConnect(t *testing.T) {
 
 func TestTrapperSend(t *testing.T) {
 	res, err := zabbix.Send(
-		zabbix.TrapperData{Host: "localhost", Key: "foo", Value: "bar"},
 		"localhost",
+		zabbix.TrapperData{Host: "localhost", Key: "foo", Value: "bar"},
 		timeout,
 	)
 	if err != nil {
@@ -62,13 +62,13 @@ func TestTrapperSend(t *testing.T) {
 
 func TestTrapperSendBulk(t *testing.T) {
 	res, err := zabbix.SendBulk(
+		"localhost",
 		zabbix.TrapperRequest{
 			Data: []zabbix.TrapperData{
 				zabbix.TrapperData{Host: "localhost", Key: "foo", Value: "bar"},
 				zabbix.TrapperData{Host: "localhost", Key: "xxx", Value: "yyy"},
 			},
 		},
-		"localhost",
 		timeout,
 	)
 	if err != nil {
@@ -87,13 +87,13 @@ func TestTrapperSendBulk(t *testing.T) {
 
 func TestTrapperSendTimeout(t *testing.T) {
 	res, err := zabbix.SendBulk(
+		"localhost",
 		zabbix.TrapperRequest{
 			Request: "timeout",
 			Data: []zabbix.TrapperData{
 				zabbix.TrapperData{Host: "localhost", Key: "foo", Value: "bar"},
 			},
 		},
-		"localhost",
 		timeout,
 	)
 	if err == nil {
@@ -107,8 +107,8 @@ func TestTrapperSendTimeout(t *testing.T) {
 
 func TestTrapperShutdown(t *testing.T) {
 	zabbix.SendBulk(
-		zabbix.TrapperRequest{Request: "shutdown"},
 		"localhost",
+		zabbix.TrapperRequest{Request: "shutdown"},
 		timeout,
 	)
 	<-done
