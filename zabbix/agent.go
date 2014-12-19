@@ -35,7 +35,7 @@ func handleAgentConn(conn net.Conn, callback func(string) (string, error)) {
 	key, err := Stream2Data(conn)
 	if err != nil {
 		log.Println("request error:", err)
-		conn.Write(Data2Packet(ErrorMessageBytes))
+		Data2Stream(ErrorMessageBytes, conn)
 		return
 	}
 	keyStr := strings.TrimRight(string(key), "\n")
@@ -43,8 +43,8 @@ func handleAgentConn(conn net.Conn, callback func(string) (string, error)) {
 	if err != nil {
 		log.Println("process callback error:", err)
 		value = ErrorMessage
-		conn.Write(Data2Packet(ErrorMessageBytes))
+		Data2Stream(ErrorMessageBytes, conn)
 		return
 	}
-	conn.Write(Data2Packet([]byte(value)))
+	Data2Stream([]byte(value), conn)
 }

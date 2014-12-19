@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"io"
 )
 
 const (
@@ -22,17 +23,17 @@ var (
 	HeaderBytes       = []byte(HeaderString)
 )
 
-type ConnReader interface {
-	Read(b []byte) (n int, err error)
-}
-
 func Data2Packet(data []byte) []byte {
 	buf := new(bytes.Buffer)
-	buf.Write(HeaderBytes)
-	binary.Write(buf, binary.LittleEndian, HeaderVersion)
-	binary.Write(buf, binary.LittleEndian, int64(len(data)))
-	buf.Write(data)
+	Data2Stream(data, buf)
 	return buf.Bytes()
+}
+
+func Data2Stream(data []byte, conn io.Writer) (int, error) {
+	conn.Write(HeaderBytes)
+	binary.Write(conn, binary.LittleEndian, HeaderVersion)
+	binary.Write(conn, binary.LittleEndian, int64(len(data)))
+	return conn.Write(data)
 }
 
 func Packet2Data(packet []byte) (data []byte, err error) {
@@ -61,7 +62,7 @@ func Packet2Data(packet []byte) (data []byte, err error) {
 	return
 }
 
-func Stream2Data(conn ConnReader) (rdata []byte, err error) {
+func Stream2Data(conn io.Reader) (rdata []byte, err error) {
 	// read header "ZBXD\x01"
 	head := make([]byte, DataLengthOffset)
 	_, err = conn.Read(head)
@@ -76,7 +77,7 @@ func Stream2Data(conn ConnReader) (rdata []byte, err error) {
 	return
 }
 
-func parseBinary(conn ConnReader) (rdata []byte, err error) {
+func parseBinary(conn io.Reader) (rdata []byte, err error) {
 	// read data length
 	var dataLength int64
 	err = binary.Read(conn, binary.LittleEndian, &dataLength)
@@ -103,7 +104,7 @@ func parseBinary(conn ConnReader) (rdata []byte, err error) {
 	return
 }
 
-func parseText(conn ConnReader, head []byte) (rdata []byte, err error) {
+func parseText(conn io.Reader, head []byte) (rdata []byte, err error) {
 	data := new(bytes.Buffer)
 	data.Write(head)
 	buf := make([]byte, 1024)
