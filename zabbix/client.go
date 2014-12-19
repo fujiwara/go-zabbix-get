@@ -1,30 +1,38 @@
 package zabbix
 
 import (
+	"fmt"
 	"net"
 	"time"
 )
 
-func FillDefaultPort (addr string) string {
+const (
+	AgentDefaultPort  = 10050
+	ServerDefaultPort = 10051
+)
+
+func FillDefaultPort(addr string, port int) string {
 	_, _, err := net.SplitHostPort(addr)
 	if err != nil {
-		return addr + ":10050"
+		return fmt.Sprintf("%s:%d", addr, port)
 	}
 	return addr
 }
 
-func Get(host string, key string, timeout int) (value []byte, err error) {
-	host = FillDefaultPort(host)
-	conn, err := net.DialTimeout("tcp", host, time.Duration(timeout)*time.Second)
+func Get(addr string, key string, timeout time.Duration) (value string, err error) {
+	addr = FillDefaultPort(addr, AgentDefaultPort)
+	conn, err := net.DialTimeout("tcp", addr, timeout)
 	if err != nil {
 		return
 	}
 	defer conn.Close()
+	conn.SetDeadline(time.Now().Add(timeout))
+
 	msg := Data2Packet([]byte(key))
 	_, err = conn.Write(msg)
 	if err != nil {
 		return
 	}
-	value, err = Stream2Data(conn)
-	return
+	_value, err := Stream2Data(conn)
+	return string(_value), err
 }

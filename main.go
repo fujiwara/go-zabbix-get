@@ -3,10 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/fujiwara/go-zabbix-get/zabbix"
 	"log"
 	"os"
 	"time"
+
+	"github.com/fujiwara/go-zabbix-get/zabbix"
 )
 
 var (
@@ -43,7 +44,7 @@ func main() {
 	}
 
 	address := fmt.Sprintf("%s:%d", server, port)
-	value, err := zabbix.Get(address, key, timeout)
+	value, err := zabbix.Get(address, key, time.Duration(timeout)*time.Second)
 	if err != nil {
 		log.Fatalf("error: %s", err)
 	}
@@ -60,10 +61,10 @@ func main() {
 	}
 }
 
-func printFormatZabbix(value []byte) {
+func printFormatZabbix(value string) {
 	fmt.Printf("%s\n", value)
 }
 
-func printFormatSensu(key string, value []byte) {
+func printFormatSensu(key string, value string) {
 	fmt.Printf("%s\t%s\t%d\n", key, value, time.Now().Unix())
 }
