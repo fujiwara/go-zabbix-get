@@ -1,7 +1,9 @@
-package zabbix
+package zabbix_test
 
 import (
 	"testing"
+
+	"github.com/fujiwara/go-zabbix-get/zabbix"
 )
 
 func TestIncludesPortNumber(t *testing.T) {
@@ -11,7 +13,7 @@ func TestIncludesPortNumber(t *testing.T) {
 		"[2001:db8::dead:beef]:10050",
 	}
 	for _, addr := range addrWithPort {
-		if FillDefaultPort(addr) != addr {
+		if zabbix.FillDefaultPort(addr, zabbix.AgentDefaultPort) != addr {
 			t.Errorf("%s includes port number", addr)
 		}
 	}
@@ -24,7 +26,7 @@ func TestNotIncludesPortNumber(t *testing.T) {
 		"[2001:db8::dead:beef]",
 	}
 	for _, addr := range addrWithoutPort {
-		if FillDefaultPort(addr) != addr + ":10050" {
+		if zabbix.FillDefaultPort(addr, zabbix.AgentDefaultPort) != addr+":10050" {
 			t.Errorf("%s not includes port number", addr)
 		}
 	}

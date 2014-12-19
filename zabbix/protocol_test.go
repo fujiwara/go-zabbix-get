@@ -1,43 +1,45 @@
-package zabbix
+package zabbix_test
 
 import (
 	"bytes"
 	"testing"
+
+	"github.com/fujiwara/go-zabbix-get/zabbix"
 )
 
 func TestPacket(t *testing.T) {
 	source := []byte("test.data")
-	packet := Data2Packet(source)
+	packet := zabbix.Data2Packet(source)
 	compare := []byte{
-		90, 66, 88, 68,         // "ZBXD"
+		90, 66, 88, 68, // "ZBXD"
 		1,                      // \x01
 		9, 0, 0, 0, 0, 0, 0, 0, // binary int64(9) == len("test.data")
-		116, 101, 115, 116,     // "test"
-		46,                     // "."
-		100, 97, 116, 97,       // "data"
+		116, 101, 115, 116, // "test"
+		46,               // "."
+		100, 97, 116, 97, // "data"
 	}
-	if ! bytes.Equal(packet, compare) {
+	if !bytes.Equal(packet, compare) {
 		t.Errorf("invalid packet %v <=> %v", packet, compare)
 	}
-	restored, err := Packet2Data(packet)
+	restored, err := zabbix.Packet2Data(packet)
 	if err != nil {
 		t.Errorf("must be no error: %v", err)
 	}
-	if ! bytes.Equal(restored, source) {
+	if !bytes.Equal(restored, source) {
 		t.Errorf("invalid data %v <=> %v", restored, source)
 	}
 }
 
 func TestCorruptedPacket(t *testing.T) {
 	packet := []byte{
-		90, 66, 88, 68,         // "ZBXD"
+		90, 66, 88, 68, // "ZBXD"
 		0,                      // CORRUPTED!!
 		9, 0, 0, 0, 0, 0, 0, 0, // binary int64(9) == len("test.data")
-		116, 101, 115, 116,     // "test"
-		46,                     // "."
-		100, 97, 116, 97,       // "data"
+		116, 101, 115, 116, // "test"
+		46,               // "."
+		100, 97, 116, 97, // "data"
 	}
-	restored, err := Packet2Data(packet)
+	restored, err := zabbix.Packet2Data(packet)
 	if err == nil {
 		t.Errorf("must be error")
 	}
@@ -46,13 +48,13 @@ func TestCorruptedPacket(t *testing.T) {
 
 func TestStreamBinary(t *testing.T) {
 	source := []byte("test.data")
-	packet := Data2Packet(source)
+	packet := zabbix.Data2Packet(source)
 	buf := bytes.NewReader(packet)
-	restored, err := Stream2Data(buf)
+	restored, err := zabbix.Stream2Data(buf)
 	if err != nil {
 		t.Errorf("must be no error: %v", err)
 	}
-	if ! bytes.Equal(restored, source) {
+	if !bytes.Equal(restored, source) {
 		t.Errorf("invalid data %v <=> %v", restored, source)
 	}
 }
@@ -60,11 +62,11 @@ func TestStreamBinary(t *testing.T) {
 func TestStreamText(t *testing.T) {
 	source := []byte("test.data\n")
 	reader := bytes.NewReader(source)
-	restored, err := Stream2Data(reader)
+	restored, err := zabbix.Stream2Data(reader)
 	if err != nil {
 		t.Errorf("must be no error: %v", err)
 	}
-	if ! bytes.Equal(restored, source) {
+	if !bytes.Equal(restored, source) {
 		t.Errorf("invalid data %v <=> %v", restored, source)
 	}
 }

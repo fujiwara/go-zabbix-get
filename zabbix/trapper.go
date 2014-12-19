@@ -11,9 +11,10 @@ import (
 const (
 	TrapperResponseSuccess = "success"
 	TrapperResponseInfoFmt = "processed: %d; failed: %d; total: %d; seconds spent: %f"
+	TrapperRequestString   = "sender data"
 )
 
-type TrapperDatum struct {
+type TrapperData struct {
 	Host  string `json:"host"`
 	Key   string `json:"key"`
 	Value string `json:"value"`
@@ -21,9 +22,14 @@ type TrapperDatum struct {
 }
 
 type TrapperRequest struct {
-	Request string `json:"request"`
-	Clock   int64  `json:"clock"`
-	Data    []TrapperDatum
+	Request string        `json:"request"`
+	Clock   int64         `json:"clock"`
+	Data    []TrapperData `json:"data"`
+}
+
+func (r TrapperRequest) ToPacket() []byte {
+	data, _ := json.Marshal(r)
+	return Data2Packet(data)
 }
 
 type TrapperResponse struct {
@@ -34,11 +40,52 @@ type TrapperResponse struct {
 	Total     int    `json:""`
 }
 
-func RunTrapperServer(addr string, callback func(TrapperRequest) (TrapperResponse, error)) error {
-	log.Println("Starting trapper server on", addr)
+func (r TrapperResponse) ToPacket() []byte {
+	data, _ := json.Marshal(r)
+	return Data2Packet(data)
+}
+
+func SendBulk(req TrapperRequest, addr string, timeout time.Duration) (res TrapperResponse, err error) {
+	packet := req.ToPacket()
+
+	addr = FillDefaultPort(addr, ServerDefaultPort)
+	conn, err := net.DialTimeout("tcp", addr, timeout)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+	conn.SetDeadline(time.Now().Add(timeout))
+
+	_, err = conn.Write(packet)
+	if err != nil {
+		return
+	}
+
+	data, err := Stream2Data(conn)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(data, &res)
+	if err != nil {
+		return
+	}
+	return res, nil
+}
+
+func Send(data TrapperData, addr string, timeout time.Duration) (TrapperResponse, error) {
+	req := TrapperRequest{
+		Request: TrapperRequestString,
+		Data:    []TrapperData{data},
+	}
+	return SendBulk(req, addr, timeout)
+}
+
+func RunTrapper(addr string, callback func(TrapperRequest) (TrapperResponse, error)) error {
+	addr = FillDefaultPort(addr, ServerDefaultPort)
+	log.Println("Starting trapper on", addr)
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		log.Fatal("Can't lesten tcp:10051", err)
+		log.Fatal("Can't lesten tcp", addr, err)
 	}
 	log.Println("Ready for connection")
 	var conn net.Conn
@@ -87,6 +134,5 @@ func handleTrapperConn(conn net.Conn, callback func(TrapperRequest) (TrapperResp
 			time.Now().Sub(start).Seconds(),
 		)
 	}
-	responseJson, _ := json.Marshal(res)
-	conn.Write(Data2Packet(responseJson))
+	conn.Write(res.ToPacket())
 }

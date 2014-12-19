@@ -16,8 +16,11 @@ const (
 	ErrorMessage     = "ZBX_NOTSUPPORTED"
 )
 
-var Terminator = []byte("\n")
-var HeaderBytes = []byte(HeaderString)
+var (
+	ErrorMessageBytes = []byte(ErrorMessage)
+	Terminator        = []byte("\n")
+	HeaderBytes       = []byte(HeaderString)
+)
 
 type ConnReader interface {
 	Read(b []byte) (n int, err error)
@@ -43,7 +46,7 @@ func Packet2Data(packet []byte) (data []byte, err error) {
 	headBuf := bytes.NewReader(packet[0:DataLengthOffset])
 	head := make([]byte, DataLengthOffset)
 	_, err = headBuf.Read(head)
-	if ! bytes.Equal(head[0:HeaderLength], HeaderBytes) || head[HeaderLength] != byte(HeaderVersion) {
+	if !bytes.Equal(head[0:HeaderLength], HeaderBytes) || head[HeaderLength] != byte(HeaderVersion) {
 		err = errors.New("invalid packet header")
 		return
 	}
@@ -121,7 +124,7 @@ func parseText(conn ConnReader, head []byte) (rdata []byte, err error) {
 			continue
 		}
 		// terminator found
-		data.Write(buf[0:i+1])
+		data.Write(buf[0 : i+1])
 		break
 	}
 	rdata = data.Bytes()
