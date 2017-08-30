@@ -12,7 +12,6 @@ const (
 	TrapperResponseSuccess = "success"
 	TrapperResponseInfoFmt = "processed: %d; failed: %d; total: %d; seconds spent: %f"
 	TrapperRequestString   = "sender data"
-	ProtoValueSenderData   = "sender data"
 )
 
 type TrapperData struct {
@@ -116,7 +115,7 @@ func handleTrapperConn(conn net.Conn, callback func(TrapperRequest) (TrapperResp
 		log.Println("decode request error:", err)
 		return
 	}
-	if request.Request != ProtoValueSenderData {
+	if request.Request != TrapperRequestString {
 		log.Println("invalid request.Request", request.Request)
 		return
 	}
