@@ -1,6 +1,7 @@
 package zabbix
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
 	"errors"
@@ -30,10 +31,23 @@ func Data2Packet(data []byte) []byte {
 }
 
 func Data2Stream(data []byte, conn io.Writer) (int, error) {
-	conn.Write(HeaderBytes)
-	binary.Write(conn, binary.LittleEndian, HeaderVersion)
-	binary.Write(conn, binary.LittleEndian, int64(len(data)))
-	return conn.Write(data)
+	w := bufio.NewWriter(conn)
+	var n int
+	w.Write(HeaderBytes)
+	n += HeaderLength
+	binary.Write(w, binary.LittleEndian, HeaderVersion)
+	n += 1
+	binary.Write(w, binary.LittleEndian, int64(len(data)))
+	n += int(DataLengthSize)
+	if _n, err := w.Write(data); err != nil {
+		return 0, err
+	} else {
+		n += _n
+	}
+	if err := w.Flush(); err != nil {
+		return 0, err
+	}
+	return n, nil
 }
 
 func Packet2Data(packet []byte) (data []byte, err error) {
