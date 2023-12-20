@@ -9,16 +9,13 @@ import (
 	"github.com/fujiwara/go-zabbix-get/zabbix"
 )
 
-func TestTrapper(t *testing.T) {
-	done = make(chan bool)
+func runTestTrapper() {
 	go zabbix.RunTrapper("localhost", func(req zabbix.TrapperRequest) (res zabbix.TrapperResponse, err error) {
 		switch req.Request {
 		case "timeout":
 			log.Println("request timeout sleeping...")
 			time.Sleep(timeout + time.Second)
 			log.Println("wake up")
-		case "shutdown":
-			done <- true
 		}
 		for _, data := range req.Data {
 			log.Println(data)
@@ -26,7 +23,6 @@ func TestTrapper(t *testing.T) {
 		res.Proceeded = len(req.Data)
 		return res, nil
 	})
-	time.Sleep(1 * time.Second)
 }
 
 func TestTrapperCannotConnect(t *testing.T) {
@@ -36,7 +32,7 @@ func TestTrapperCannotConnect(t *testing.T) {
 		timeout,
 	)
 	if err == nil {
-		t.Errorf("trapper is not runnig, but not error value:", value)
+		t.Errorf("trapper is not runnig, but not error value: %#v", value)
 	}
 }
 
@@ -47,16 +43,16 @@ func TestTrapperSend(t *testing.T) {
 		timeout,
 	)
 	if err != nil {
-		t.Errorf("send failed", err)
+		t.Errorf("send failed %s", err)
 	}
 	if res.Proceeded != 1 {
-		t.Errorf("proceeded expected 1 got", res.Proceeded)
+		t.Errorf("proceeded expected 1 got %d", res.Proceeded)
 	}
 	if res.Failed != 0 {
-		t.Errorf("failed expected 0 got", res.Failed)
+		t.Errorf("failed expected 0 got %d", res.Failed)
 	}
 	if res.Total != 1 {
-		t.Errorf("total expected 1 got", res.Total)
+		t.Errorf("total expected 1 got %d", res.Total)
 	}
 }
 
@@ -64,24 +60,25 @@ func TestTrapperSendBulk(t *testing.T) {
 	res, err := zabbix.SendBulk(
 		"localhost",
 		zabbix.TrapperRequest{
+			Request: "sender data",
 			Data: []zabbix.TrapperData{
-				zabbix.TrapperData{Host: "localhost", Key: "foo", Value: "bar"},
-				zabbix.TrapperData{Host: "localhost", Key: "xxx", Value: "yyy"},
+				{Host: "localhost", Key: "foo", Value: "bar"},
+				{Host: "localhost", Key: "xxx", Value: "yyy"},
 			},
 		},
 		timeout,
 	)
 	if err != nil {
-		t.Errorf("send failed", err)
+		t.Errorf("send failed %s", err)
 	}
 	if res.Proceeded != 2 {
-		t.Errorf("proceeded expected 2 got", res.Proceeded)
+		t.Errorf("proceeded expected 2 got %d", res.Proceeded)
 	}
 	if res.Failed != 0 {
-		t.Errorf("failed expected 0 got", res.Failed)
+		t.Errorf("failed expected 0 got %d", res.Failed)
 	}
 	if res.Total != 2 {
-		t.Errorf("total expected 2 got", res.Total)
+		t.Errorf("total expected 2 got %d", res.Total)
 	}
 }
 
@@ -91,7 +88,7 @@ func TestTrapperSendTimeout(t *testing.T) {
 		zabbix.TrapperRequest{
 			Request: "timeout",
 			Data: []zabbix.TrapperData{
-				zabbix.TrapperData{Host: "localhost", Key: "foo", Value: "bar"},
+				{Host: "localhost", Key: "foo", Value: "bar"},
 			},
 		},
 		timeout,
@@ -103,13 +100,4 @@ func TestTrapperSendTimeout(t *testing.T) {
 		t.Error("err expected i/o timeout. got:", err)
 	}
 	log.Println("client timeout", res)
-}
-
-func TestTrapperShutdown(t *testing.T) {
-	zabbix.SendBulk(
-		"localhost",
-		zabbix.TrapperRequest{Request: "shutdown"},
-		timeout,
-	)
-	<-done
 }

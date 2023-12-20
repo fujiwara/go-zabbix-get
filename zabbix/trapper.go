@@ -98,7 +98,6 @@ func RunTrapper(addr string, callback func(TrapperRequest) (TrapperResponse, err
 		// log.Println("Accept connection from", conn.RemoteAddr())
 		go handleTrapperConn(conn, callback)
 	}
-	return nil
 }
 
 func handleTrapperConn(conn net.Conn, callback func(TrapperRequest) (TrapperResponse, error)) {
@@ -116,8 +115,7 @@ func handleTrapperConn(conn net.Conn, callback func(TrapperRequest) (TrapperResp
 		return
 	}
 	if request.Request != TrapperRequestString {
-		log.Println("invalid request.Request", request.Request)
-		return
+		log.Println("[warn] invalid request.Request", request.Request)
 	}
 
 	res, err := callback(request)

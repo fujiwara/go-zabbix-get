@@ -1,7 +1,7 @@
 package zabbix_test
 
 import (
-	"fmt"
+	"errors"
 	"log"
 	"net"
 	"testing"
@@ -11,12 +11,10 @@ import (
 )
 
 var (
-	done    chan (bool)
 	timeout = 3 * time.Second
 )
 
-func TestAgent(t *testing.T) {
-	done = make(chan bool)
+func runTestAgent() {
 	go zabbix.RunAgent("localhost", func(key string) (string, error) {
 		switch key {
 		case "agent.ping":
@@ -30,20 +28,16 @@ func TestAgent(t *testing.T) {
 			time.Sleep(timeout + time.Second)
 			log.Println("wake up. response ok!")
 			return "ok", nil
-		case "shutdown":
-			done <- true
-			return "", nil
 		default:
-			return "", fmt.Errorf("not supported")
+			return "", errors.New("not supported")
 		}
 	})
-	time.Sleep(1 * time.Second)
 }
 
 func TestAgentCannotConnect(t *testing.T) {
 	value, err := zabbix.Get("localhost:10049", "agent.ping", timeout)
 	if err == nil {
-		t.Errorf("agent is not runnig, but not error value:", value)
+		t.Errorf("agent is not runnig, but not error value: %v", value)
 	}
 }
 
@@ -86,9 +80,4 @@ func TestAgentGetTimeout(t *testing.T) {
 		t.Error("err expected i/o timeout. got:", err)
 	}
 	log.Println("client timeout")
-}
-
-func TestAgentShutdown(t *testing.T) {
-	zabbix.Get("localhost", "shutdown", timeout)
-	<-done
 }
