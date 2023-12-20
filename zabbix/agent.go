@@ -25,7 +25,6 @@ func RunAgent(addr string, callback func(string) (string, error)) error {
 		// log.Println("Accept connection from", conn.RemoteAddr())
 		go handleAgentConn(conn, callback)
 	}
-	return nil
 }
 
 func handleAgentConn(conn net.Conn, callback func(string) (string, error)) {
